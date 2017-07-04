@@ -48,7 +48,7 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 		SSView.a(mSsView, true);
 		boolean bool1 = true;
 		boolean bool2 = true;
-		if ((SSView.s(mSsView) < mSsView.getMeasuredWidth())
+		if ((SSView.getViewWidth(mSsView) < mSsView.getMeasuredWidth())
 				&& (0.0F == SSView.v(mSsView))) {
 			bool1 = false;
 		}
@@ -71,13 +71,14 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 			}
 
 			if (SSView.r(mSsView) + mSsView.getMeasuredWidth() > SSView
-					.s(mSsView)) {
+					.getViewWidth(mSsView)) {
 				// 滑到最右
-				SSView.i(mSsView,
-						SSView.s(mSsView) - mSsView.getMeasuredWidth());
-				SSView.a(
+				SSView.i(
 						mSsView,
-						(float) (mSsView.getMeasuredWidth() - SSView.s(mSsView)));
+						SSView.getViewWidth(mSsView)
+								- mSsView.getMeasuredWidth());
+				SSView.a(mSsView, (float) (mSsView.getMeasuredWidth() - SSView
+						.getViewWidth(mSsView)));
 			}
 			SSView.setRowOffsetHorizontal(mSsView, (float) k);
 		}

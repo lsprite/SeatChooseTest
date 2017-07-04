@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.widget.Toast;
 
@@ -15,7 +16,7 @@ import com.ldm.seatchoosetest.view.SSView;
 
 public class MainActivity extends Activity {
 	private static final int ROW = 16;
-	private static final int EACH_ROW_COUNT = 20;
+	private static final int EACH_ROW_COUNT = 28;
 	private SSView mSSView;
 	private SSThumView mSSThumView;
 	private ArrayList<SeatInfo> list_seatInfos = new ArrayList<SeatInfo>();
@@ -35,7 +36,9 @@ public class MainActivity extends Activity {
 		mSSThumView = (SSThumView) this.findViewById(R.id.ss_ssthumview);
 		setSeatInfo();
 		mSSView.init(EACH_ROW_COUNT, ROW, list_seatInfos, list_seat_conditions,
-				mSSThumView, 5);
+				mSSThumView, 5, Math.abs(EACH_ROW_COUNT / 2 - 4),
+				Math.abs(EACH_ROW_COUNT / 2 + 4), Math.abs(ROW / 2 - 3),
+				Math.abs(ROW / 2 + 3));
 		mSSView.setOnSeatClickListener(new OnSeatClickListener() {
 			@Override
 			public boolean b(int column_num, int row_num, boolean paramBoolean) {
@@ -62,8 +65,51 @@ public class MainActivity extends Activity {
 		});
 	}
 
+	boolean isFirst = true;
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		toCenter();
+	}
+
+	// 用模拟手势让画移动到中间
+	private void toCenter() {
+		if (isFirst) {
+			handler.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					// 1580,1264||1080,1363
+					// 2100,1680||1080,1363
+					int viewWidth = SSView.getViewWidth(mSSView);
+					int viewHeight = SSView.getViewHeight(mSSView);
+					int measuredWidtht = SSView.getmyMeasuredWidth(mSSView);
+					int measuredHeight = SSView.getmyMeasuredHeight(mSSView);
+					long dowTime = SystemClock.uptimeMillis();
+					float difW = viewWidth > measuredWidtht ? (viewWidth - measuredWidtht)
+							: 0;
+					float difH = viewHeight > measuredHeight ? (viewHeight - measuredHeight)
+							: 0;
+					difW = -Math.abs(difW / 2);
+					difH = -Math.abs(difH / 2);
+					System.out.println("---difW:" + difW);
+					System.out.println("---difH:" + difH);
+					if (viewWidth != 0 && viewHeight != 0) {
+						isFirst = false;
+						MotionEvent move = MotionEvent.obtain(dowTime,
+								dowTime + 20, MotionEvent.ACTION_MOVE, difW,
+								difH, 0);
+						mSSView.dispatchTouchEvent(move);
+					}
+				}
+			}, 100);
+		}
+	}
+
 	private void setSeatInfo() {
-		for (int i = 0; i < ROW; i++) {// 8行
+		for (int i = 0; i < ROW; i++) {// 16行
 			SeatInfo mSeatInfo = new SeatInfo();
 			ArrayList<Seat> mSeatList = new ArrayList<Seat>();
 			ArrayList<Integer> mConditionList = new ArrayList<Integer>();

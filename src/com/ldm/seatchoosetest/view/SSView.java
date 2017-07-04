@@ -36,7 +36,7 @@ public class SSView extends View {
 	/** 缩略图画布 */
 	private Canvas mCanvas = null;
 	/** 是否初始化显示缩略图U */
-	private boolean showThumbnail = true;
+	private boolean showThumbnail = false;
 	/** 每个座位的高度 -> 57 */
 	private int ss_seat_current_height = 57;
 	/** 每个座位的宽度 */
@@ -101,10 +101,10 @@ public class SSView extends View {
 	private int totalCountEachRow;
 	private int rows;
 	// 最佳观赏区域
-	private int bestview_x_min = 3;
-	private int bestview_x_max = 12;
-	private int bestview_y_min = 6;
-	private int bestview_y_max = 9;
+	private int bestview_x_min = 0;
+	private int bestview_x_max = 0;
+	private int bestview_y_min = 0;
+	private int bestview_y_max = 0;
 	//
 	private OnSeatClickListener mOnSeatClickListener = null;
 	GestureDetector mGestureDetector = new GestureDetector(mContext,
@@ -120,10 +120,28 @@ public class SSView extends View {
 		this.mContext = paramContext;
 	}
 
+	/**
+	 * 
+	 * @param row_count列数
+	 * @param rows行数
+	 * @param list_seatInfos每行情况
+	 * @param list_seat_condtions
+	 * @param paramSSThumView缩略图
+	 * @param imaxPay最大选择数
+	 * @param bestview_x_min最佳观影
+	 * @param bestview_x_max最佳观影
+	 * @param bestview_y_min最佳观影
+	 * @param bestview_y_max最佳观影
+	 */
 	public void init(int row_count, int rows,
 			ArrayList<SeatInfo> list_seatInfos,
 			ArrayList<ArrayList<Integer>> list_seat_condtions,
-			SSThumView paramSSThumView, int imaxPay) {
+			SSThumView paramSSThumView, int imaxPay, int bestview_x_min,
+			int bestview_x_max, int bestview_y_min, int bestview_y_max) {
+		this.bestview_x_min = bestview_x_min;
+		this.bestview_x_max = bestview_x_max;
+		this.bestview_y_min = bestview_y_min;
+		this.bestview_y_max = bestview_y_max;
 		this.iMaxPay = imaxPay;
 		this.currentSelect = new ArrayList<SeatSelect>();
 		this.mSSThumView = paramSSThumView;
@@ -285,6 +303,10 @@ public class SSView extends View {
 	 * @return
 	 */
 	private Rect getBestViewSeat() {
+		System.out.println("----bestview_x_min:" + bestview_x_min);
+		System.out.println("----bestview_x_max:" + bestview_x_max);
+		System.out.println("----bestview_y_min:" + bestview_y_min);
+		System.out.println("----bestview_y_max:" + bestview_y_max);
 		try {
 			Rect localRect = new Rect((bestview_x_min - 1)
 					* ss_seat_current_width + distanceBetweenSeats / 2,
@@ -564,6 +586,14 @@ public class SSView extends View {
 		return mSsView.view_height;
 	}
 
+	public static int getmyMeasuredWidth(SSView mSsView) {
+		return mSsView.getMeasuredWidth();
+	}
+
+	public static int getmyMeasuredHeight(SSView mSsView) {
+		return mSsView.getMeasuredHeight();
+	}
+
 	/**
 	 * 获取可视座位距离顶端的距离
 	 * 
@@ -580,7 +610,7 @@ public class SSView extends View {
 	 * @param mSsView
 	 * @return
 	 */
-	public static int s(SSView mSsView) {
+	public static int getViewWidth(SSView mSsView) {
 		return mSsView.view_width;
 	}
 
