@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.MotionEvent;
 import android.widget.Toast;
 
 import com.ldm.seatchoosetest.model.Seat;
@@ -12,12 +14,14 @@ import com.ldm.seatchoosetest.view.SSThumView;
 import com.ldm.seatchoosetest.view.SSView;
 
 public class MainActivity extends Activity {
-	private static final int ROW = 9;
+	private static final int ROW = 16;
 	private static final int EACH_ROW_COUNT = 20;
 	private SSView mSSView;
 	private SSThumView mSSThumView;
 	private ArrayList<SeatInfo> list_seatInfos = new ArrayList<SeatInfo>();
 	private ArrayList<ArrayList<Integer>> list_seat_conditions = new ArrayList<ArrayList<Integer>>();
+	private Handler handler = new Handler() {
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +35,7 @@ public class MainActivity extends Activity {
 		mSSThumView = (SSThumView) this.findViewById(R.id.ss_ssthumview);
 		setSeatInfo();
 		mSSView.init(EACH_ROW_COUNT, ROW, list_seatInfos, list_seat_conditions,
-				mSSThumView, 1);
+				mSSThumView, 5);
 		mSSView.setOnSeatClickListener(new OnSeatClickListener() {
 			@Override
 			public boolean b(int column_num, int row_num, boolean paramBoolean) {
@@ -72,6 +76,8 @@ public class MainActivity extends Activity {
 					mSeat.setN(String.valueOf(j - 2));
 					if (j > 10) {
 						mConditionList.add(2);
+					} else if (j == 5) {
+						mConditionList.add(0);
 					} else {
 						mConditionList.add(1);
 					}

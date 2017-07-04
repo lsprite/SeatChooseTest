@@ -1,6 +1,17 @@
 ﻿package com.ldm.seatchoosetest.model;
 
 public class Seat {
+	//
+	public interface SeatStatus {
+		int WALKWAY_X = -1;// 走道x轴
+		int WALKWAY_Y = -2;// 走道y轴
+		int WALKWAY = 0;// 走道
+		int SELECTABLE = 1;// 可选
+		int LOCKED = 2;// 锁定(已经被选了)
+		int SELECTED = 3;// 已选
+	}
+
+	//
 	/** 序号，当为走道时 为"Z" */
 	private String n = null;
 	/** 损坏标签 */

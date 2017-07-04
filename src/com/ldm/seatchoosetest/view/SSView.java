@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.util.FloatMath;
@@ -18,11 +20,12 @@ import android.view.View;
 
 import com.ldm.seatchoosetest.OnSeatClickListener;
 import com.ldm.seatchoosetest.R;
+import com.ldm.seatchoosetest.model.Seat;
 import com.ldm.seatchoosetest.model.SeatInfo;
+import com.ldm.seatchoosetest.model.SeatSelect;
 
 public class SSView extends View {
 	Context mContext;
-	int x_offset = 0;
 	private String TAG = "SSView";
 	/** 普通状态 */
 	private Bitmap mBitMapSeatNormal = null;
@@ -33,7 +36,7 @@ public class SSView extends View {
 	/** 缩略图画布 */
 	private Canvas mCanvas = null;
 	/** 是否初始化显示缩略图U */
-	private boolean showThumbnail = false;
+	private boolean showThumbnail = true;
 	/** 每个座位的高度 -> 57 */
 	private int ss_seat_current_height = 57;
 	/** 每个座位的宽度 */
@@ -53,10 +56,9 @@ public class SSView extends View {
 	/** 座位最大宽度 */
 	private int ss_seat_max_width = 0;
 
-	public static double a = 1.0E-006D;
 	private int I = 0;
 	private int ss_between_offset = 2;
-	private int ss_seat_check_size = 50;
+	private int ss_seat_check_size = 30;
 	private SSThumView mSSThumView = null;
 	private int ss_seat_thum_size_w = 120;
 	private int ss_seat_thum_size_h = 90;
@@ -64,14 +66,6 @@ public class SSView extends View {
 	/** 选座缩略图 */
 	private Bitmap mBitMapThumView = null;
 	private volatile int V = 1500;
-	/** 左边距 h */
-	private int margin_left = 0;
-	/** 右边距 i */
-	private int margin_right = 0;
-	/** 上边距 j */
-	private int margin_top = 0;
-	/** 下边距 k */
-	private int margin_bottom = 0;
 	/** 排数x轴偏移量n */
 	private float YaxisOffset_horizontal = 0.0F;
 	/** 排数y轴偏移量o */
@@ -103,9 +97,15 @@ public class SSView extends View {
 	private ArrayList<SeatInfo> mListSeatInfos = null;
 	private ArrayList<ArrayList<Integer>> mListSeatConditions = null;
 	private int iMaxPay = 0;// 最大支付座位数
+	private ArrayList<SeatSelect> currentSelect = null;
 	private int totalCountEachRow;
 	private int rows;
-
+	// 最佳观赏区域
+	private int bestview_x_min = 3;
+	private int bestview_x_max = 12;
+	private int bestview_y_min = 6;
+	private int bestview_y_max = 9;
+	//
 	private OnSeatClickListener mOnSeatClickListener = null;
 	GestureDetector mGestureDetector = new GestureDetector(mContext,
 			new GestureListener(this));
@@ -125,6 +125,7 @@ public class SSView extends View {
 			ArrayList<ArrayList<Integer>> list_seat_condtions,
 			SSThumView paramSSThumView, int imaxPay) {
 		this.iMaxPay = imaxPay;
+		this.currentSelect = new ArrayList<SeatSelect>();
 		this.mSSThumView = paramSSThumView;
 		this.totalCountEachRow = row_count;
 		this.rows = rows;
@@ -161,6 +162,7 @@ public class SSView extends View {
 				.getDimensionPixelSize(R.dimen.ss_seat_check_size);// 30dp
 		this.ss_between_offset = mContext.getResources().getDimensionPixelSize(
 				R.dimen.ss_between_offset);// 5dp
+		distanceBetweenSeats = calculateDistanceBetweenSeats();
 		invalidate();
 	}
 
@@ -192,6 +194,7 @@ public class SSView extends View {
 			if (showThumbnail) {
 				paramCanvas2.drawRect(getSeatRectForThumb(seatNum, rowNum),
 						paramPaint);
+
 			}
 		} else {
 			paramCanvas1.drawBitmap(paramBitmap, null,
@@ -214,12 +217,12 @@ public class SSView extends View {
 	 */
 	private Rect getSeatRect(int seatNum, int rowNum) {
 		try {
-			Rect localRect = new Rect(margin_left + seatNum
-					* ss_seat_current_width + distanceBetweenSeats, margin_top
-					+ rowNum * ss_seat_current_height + distanceBetweenSeats,
-					margin_left + (seatNum + 1) * ss_seat_current_width
-							- distanceBetweenSeats, margin_top + (rowNum + 1)
-							* ss_seat_current_height - distanceBetweenSeats);
+			Rect localRect = new Rect(seatNum * ss_seat_current_width
+					+ distanceBetweenSeats, rowNum * ss_seat_current_height
+					+ distanceBetweenSeats, (seatNum + 1)
+					* ss_seat_current_width - distanceBetweenSeats,
+					(rowNum + 1) * ss_seat_current_height
+							- distanceBetweenSeats);
 			return localRect;
 		} catch (Exception localException) {
 			localException.printStackTrace();
@@ -236,14 +239,11 @@ public class SSView extends View {
 	 */
 	private Rect getSeatRectForThumb(int seatNum, int rowNum) {
 		try {
-			Rect localRect = new Rect(5 + (int) (T * (margin_left + seatNum
-					* ss_seat_current_width + distanceBetweenSeats)),
-					5 + (int) (T * (margin_top + rowNum
-							* ss_seat_current_height + distanceBetweenSeats)),
-					5 + (int) (T * (margin_left + (seatNum + 1)
-							* ss_seat_current_width - distanceBetweenSeats)),
-					5 + (int) (T * (margin_top + (rowNum + 1)
-							* ss_seat_current_height - distanceBetweenSeats)));
+			Rect localRect = new Rect(
+					5 + (int) (T * (seatNum * ss_seat_current_width + distanceBetweenSeats)),
+					5 + (int) (T * (rowNum * ss_seat_current_height + distanceBetweenSeats)),
+					5 + (int) (T * ((seatNum + 1) * ss_seat_current_width - distanceBetweenSeats)),
+					5 + (int) (T * ((rowNum + 1) * ss_seat_current_height - distanceBetweenSeats)));
 			return localRect;
 		} catch (Exception localException) {
 			localException.printStackTrace();
@@ -265,9 +265,57 @@ public class SSView extends View {
 			} else {
 				i3 = view_height;
 			}
-			return new Rect((int) (5.0D + T * paramInt1), (int) (5.0D + T
-					* paramInt2), (int) (5.0D + T * paramInt1 + i1 * T),
-					(int) (5.0D + T * paramInt2 + i3 * T));
+			// return new Rect((int) (5.0D + T * paramInt1), (int) (5.0D + T
+			// * paramInt2), (int) (5.0D + T * paramInt1 + i1 * T),
+			// (int) (5.0D + T * paramInt2 + i3 * T));
+			return new Rect((int) (5.0D + T * paramInt1),
+					(int) (T * paramInt2), (int) (5.0D + T * (paramInt1 + i1)),
+					(int) (5.0D + T * (paramInt2 + i3)));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new Rect();
+		}
+	}
+
+	/**
+	 * 最佳观赏区域对应矩形区域
+	 * 
+	 * @param seatNum
+	 * @param rowNum
+	 * @return
+	 */
+	private Rect getBestViewSeat() {
+		try {
+			Rect localRect = new Rect((bestview_x_min - 1)
+					* ss_seat_current_width + distanceBetweenSeats / 2,
+					(bestview_y_min - 1) * ss_seat_current_height,
+					bestview_x_max * ss_seat_current_width
+							+ distanceBetweenSeats / 2, bestview_y_max
+							* ss_seat_current_height);
+			return localRect;
+		} catch (Exception localException) {
+			localException.printStackTrace();
+		}
+		return new Rect();
+	}
+
+	/**
+	 * 缩略图最佳观影区域区域
+	 * 
+	 * @param seatNum
+	 * @param rowNum
+	 * @return
+	 */
+	private Rect getBestViewSeatRectForThumb() {
+		try {
+			Rect localRect = new Rect(
+					5 + (int) (T * ((bestview_x_min - 1)
+							* ss_seat_current_width + distanceBetweenSeats / 2)),
+					5 + (int) (T * ((bestview_y_min - 1)
+							* ss_seat_current_height + distanceBetweenSeats / 2)),
+					5 + (int) (T * (bestview_x_max * ss_seat_current_width - distanceBetweenSeats / 2)),
+					5 + (int) (T * (bestview_y_max * ss_seat_current_height - distanceBetweenSeats / 2)));
+			return localRect;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Rect();
@@ -280,7 +328,6 @@ public class SSView extends View {
 		if (totalCountEachRow == 0 || rows == 0) {
 			return;
 		}
-
 		if (YaxisOffset_horizontal + view_width < 0.0f
 				|| YaxisOffset_vertical + view_height < 0.0f) {
 			YaxisOffset_horizontal = 0.0f;
@@ -302,7 +349,7 @@ public class SSView extends View {
 			mCanvas.drawPaint(localPaint1);
 
 			double d1 = (ss_seat_thum_size_w - 10.0D)
-					/ (ss_seat_current_width * totalCountEachRow + margin_left + margin_right);
+					/ (ss_seat_current_width * totalCountEachRow);
 			// v0/v2
 			double d2 = (ss_seat_thum_size_h - 10.0D)
 					/ (ss_seat_current_height * rows);
@@ -312,28 +359,31 @@ public class SSView extends View {
 				T = d2;
 			}
 			if (showThumbnail) {
-				localPaint2.setColor(-16777216);
+				localPaint2.setColor(-16777216);// 缩略图背景色
 				if (first_load_bg) {
 					first_load_bg = false;
 					tempX = 5 + (int) (view_width * T);
 					tempY = 5 + (int) (view_height * T);
 				}
 				mCanvas.drawRect(5.0F, 5.0F, tempX, tempY, localPaint2);
+				//
+				// 缩略图最佳观赏区域
+				Paint localPaint3 = new Paint();
+				localPaint3.setColor(Color.RED);
+				localPaint3.setStyle(Paint.Style.FILL);
+				mCanvas.drawRect(getBestViewSeatRectForThumb(), localPaint3);
 			}
 		}
 
 		// 画座位
 		paramCanvas.translate(YaxisOffset_horizontal, YaxisOffset_vertical);
-		margin_left = (int) Math.round(ss_seat_current_width / 2.0D);
-		view_width = margin_left + ss_seat_current_width * totalCountEachRow
-				+ margin_right;
-		margin_bottom = (int) Math.round(ss_seat_current_height / 2.0D);
-		view_height = margin_top + ss_seat_current_height * rows
-				+ margin_bottom;
+		// margin_left = (int) Math.round(ss_seat_current_width / 2.0D);
+		view_width = ss_seat_current_width * totalCountEachRow;
+		view_height = ss_seat_current_height * rows;
 		if (XaxisOffset_vertical == 0) {
 			// this.getHeight()->控件高度 view_height->画布高度
-			XaxisOffset_vertical_min = getHeight() - margin_bottom;
-			XaxisOffset_vertical_max = view_height - margin_bottom;
+			XaxisOffset_vertical_min = getHeight();
+			XaxisOffset_vertical_max = view_height;
 			XaxisOffset_vertical = XaxisOffset_vertical_min
 					+ Math.abs(YaxisOffset_vertical);
 		}
@@ -345,20 +395,20 @@ public class SSView extends View {
 					.get(y);
 			for (int x = 0; x < mListSeatInfos.get(y).getSeatList().size(); x++) {
 				switch (((Integer) localArrayList.get(x)).intValue()) {
-				case 0:// 走道
+				case Seat.SeatStatus.WALKWAY:// 走道
 					localPaint2.setColor(0);
 					drawASeat(x, y, null, paramCanvas, mCanvas, localPaint2);
 					localPaint2.setColor(-16777216);
 					break;
-				case 1:// 可选
+				case Seat.SeatStatus.SELECTABLE:// 可选
 					drawASeat(x, y, mBitMapSeatNormal, paramCanvas, mCanvas,
 							localPaint2);
 					break;
-				case 2:// 锁定
+				case Seat.SeatStatus.LOCKED:// 锁定
 					drawASeat(x, y, mBitMapSeatLock, paramCanvas, mCanvas,
 							localPaint2);
 					break;
-				case 3:// 已选
+				case Seat.SeatStatus.SELECTED:// 已选
 					drawASeat(x, y, mBitMapSeatChecked, paramCanvas, mCanvas,
 							localPaint2);
 					break;
@@ -367,45 +417,48 @@ public class SSView extends View {
 				}
 			}
 		}
+		// 画最佳观赏区域
+		localPaint2.setColor(Color.RED);
+		localPaint2.setStyle(Paint.Style.STROKE);
+		localPaint2.setStrokeWidth(ss_seat_rect_line);
+		paramCanvas.drawRect(getBestViewSeat(), localPaint2);
+		localPaint2.setStyle(Paint.Style.FILL);
 
 		// 画排数 -> Y轴
-		localPaint2.setTextSize(0.4F * ss_seat_current_height);
-		int end_y = 0;
+		localPaint2.setTextSize(0.3F * ss_seat_current_height);
+		// 背景颜色
+		localPaint2.setColor(Color.argb(0x2e, 0x00, 0x00, 0x00));
+		paramCanvas.drawRoundRect(new RectF(Math.abs(YaxisOffset_horizontal),
+				0 * ss_seat_current_height, Math.abs(YaxisOffset_horizontal)
+						+ ss_seat_current_width / 2, rows
+						* ss_seat_current_height), 99, 99, localPaint2);
 		for (int i1 = 0; i1 < mListSeatInfos.size(); i1++) {
-			end_y = margin_top + (i1 + 1) * ss_seat_current_height;
-			localPaint2.setColor(-1308622848);
-			// 黑色背景
-			paramCanvas.drawRect(
-					new Rect((int) Math.abs(YaxisOffset_horizontal), margin_top
-							+ i1 * ss_seat_current_height, (int) Math
-							.abs(YaxisOffset_horizontal)
-							+ ss_seat_current_width / 2, margin_top + (i1 + 1)
-							* ss_seat_current_height), localPaint2);
 			localPaint2.setColor(-1);
 			// 文字
 			paramCanvas.drawText(((SeatInfo) mListSeatInfos.get(i1)).getDesc(),
 					(int) Math.abs(YaxisOffset_horizontal)
-							+ ss_seat_current_width / 2 / 2, margin_top + i1
+							+ ss_seat_current_width / 2 / 2, i1
 							* ss_seat_current_height + ss_seat_current_height
-							/ 2 + margin_bottom / 2, localPaint2);
+							/ 2 + distanceBetweenSeats / 2, localPaint2);
 		}
 
 		// 画列数 -> X轴
-		for (int i = 0; i < mListSeatInfos.get(0).getSeatList().size(); i++) {
-			localPaint2.setColor(-1308622848);
-			paramCanvas.drawRect(
-					new Rect(margin_left + i * ss_seat_current_width,
-							(int) Math.abs(XaxisOffset_vertical), margin_left
-									+ (i + 1) * ss_seat_current_width,
-							(int) Math.abs(XaxisOffset_vertical)
-									+ ss_seat_current_height / 2), localPaint2);
-			localPaint2.setColor(-1);
-			// 文字
-			paramCanvas.drawText(String.valueOf(i + 1), margin_left + i
-					* ss_seat_current_width + ss_seat_current_width / 2
-					+ margin_right / 2, (int) Math.abs(XaxisOffset_vertical)
-					+ ss_seat_current_height / 3, localPaint2);
-		}
+		// for (int i = 0; i < mListSeatInfos.get(0).getSeatList().size(); i++)
+		// {
+		// localPaint2.setColor(-1308622848);
+		// paramCanvas.drawRect(
+		// new Rect(margin_left + i * ss_seat_current_width,
+		// (int) Math.abs(XaxisOffset_vertical), margin_left
+		// + (i + 1) * ss_seat_current_width,
+		// (int) Math.abs(XaxisOffset_vertical)
+		// + ss_seat_current_height / 2), localPaint2);
+		// localPaint2.setColor(-1);
+		// // 文字
+		// paramCanvas.drawText(String.valueOf(i + 1), margin_left + i
+		// * ss_seat_current_width + ss_seat_current_width / 2
+		// + margin_right / 2, (int) Math.abs(XaxisOffset_vertical)
+		// + ss_seat_current_height / 3, localPaint2);
+		// }
 
 		if (showThumbnail) {
 			// 画缩略图的黄色框
@@ -423,10 +476,6 @@ public class SSView extends View {
 			mSSThumView.a(mBitMapThumView);
 			mSSThumView.invalidate();
 		}
-	}
-
-	public void setXOffset(int x_offset) {
-		this.x_offset = x_offset;
 	}
 
 	/**
@@ -458,13 +507,8 @@ public class SSView extends View {
 							* ss_seat_current_width);
 					ss_seat_current_height = (int) Math.round(zoomRatio
 							* ss_seat_current_height);
-					margin_left = (int) Math
-							.round(ss_seat_current_width / 2.0D);
-					margin_right = margin_left;
 					{
 						// 新增
-						margin_bottom = (int) Math
-								.round(ss_seat_current_height / 2.0D);
 						XaxisOffset_vertical = 0;
 					}
 					distanceBetweenSeats = (int) Math.round(zoomRatio
@@ -477,10 +521,6 @@ public class SSView extends View {
 				localException.printStackTrace();
 			}
 		}
-	}
-
-	public static int getMarginLeft(SSView mSsView) {
-		return mSsView.margin_left;
 	}
 
 	public static int m(SSView mSsView, int paramInt) {
@@ -554,16 +594,8 @@ public class SSView extends View {
 		return mSsView.distanceBetweenSeatAndYAxis;
 	}
 
-	public static int q(SSView mSsView) {
-		return mSsView.margin_top;
-	}
-
 	public static int p(SSView mSsView) {
 		return mSsView.rows;
-	}
-
-	public static int o(SSView mSsView) {
-		return mSsView.margin_right;
 	}
 
 	public static int n(SSView mSsView) {
@@ -649,9 +681,57 @@ public class SSView extends View {
 		return mSsView.iMaxPay;
 	}
 
+	/**
+	 * 获取已经选中的
+	 * 
+	 * @param mSsView
+	 * @return
+	 */
+	public static ArrayList<SeatSelect> getcurrentSelect(SSView mSsView) {
+		return mSsView.currentSelect;
+	}
+
+	/**
+	 * 删除已经选中的
+	 * 
+	 * @param mSsView
+	 * @param x
+	 * @param y
+	 */
+	public static void delCurrentSelect(SSView mSsView, int x, int y) {
+		try {
+			for (int i = 0; i < mSsView.currentSelect.size(); i++) {
+				if (mSsView.currentSelect.get(i).getX() == x
+						&& mSsView.currentSelect.get(i).getY() == y) {
+					mSsView.currentSelect.remove(i);
+					return;
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * 添加已经选中的
+	 * 
+	 * @param mSsView
+	 * @param x
+	 * @param y
+	 */
+	public static void addCurrentSelect(SSView mSsView, SeatSelect select) {
+		mSsView.currentSelect.add(select);
+	}
+
 	public static boolean a(SSView mSsView, boolean param) {
 		mSsView.showThumbnail = param;
 		return mSsView.showThumbnail;
+	}
+
+	public static Context getContext(SSView mSsView) {
+		return mSsView.mContext;
 	}
 
 	/**
@@ -685,7 +765,7 @@ public class SSView extends View {
 	 */
 	private int a(int paramInt) {
 		try {
-			int i1 = (paramInt + distanceBetweenSeatAndYAxis - margin_left)
+			int i1 = (paramInt + distanceBetweenSeatAndYAxis)
 					/ ss_seat_current_width;
 			return i1;
 		} catch (Exception localException) {
@@ -700,13 +780,13 @@ public class SSView extends View {
 
 	private Rect f(int paramInt1, int paramInt2) {
 		try {
-			int v1 = ss_seat_current_width * paramInt1 + margin_left
+			int v1 = ss_seat_current_width * paramInt1
 					- distanceBetweenSeatAndYAxis - distanceBetweenSeats;
-			int v2 = ss_seat_current_height * paramInt2 + margin_top
+			int v2 = ss_seat_current_height * paramInt2
 					- distanceBetweenVisibleSeatAndTop - distanceBetweenSeats;
-			int v3 = (paramInt1 + 1) * ss_seat_current_width + margin_left
+			int v3 = (paramInt1 + 1) * ss_seat_current_width
 					- distanceBetweenSeatAndYAxis + distanceBetweenSeats;
-			int v4 = (margin_top + 1) * ss_seat_current_height + margin_top
+			int v4 = 1 * ss_seat_current_height
 					- distanceBetweenVisibleSeatAndTop + distanceBetweenSeats;
 			return new Rect(v1, v2, v3, v4);
 		} catch (Exception e) {
@@ -819,18 +899,13 @@ public class SSView extends View {
 	 */
 	private int b(int paramInt) {
 		try {
-			int i1 = (paramInt + distanceBetweenVisibleSeatAndTop - margin_top)
+			int i1 = (paramInt + distanceBetweenVisibleSeatAndTop)
 					/ ss_seat_current_height;
 			return i1;
 		} catch (Exception localException) {
 			localException.printStackTrace();
 		}
 		return -1;
-	}
-
-	public static int e(SSView mSsView, int param) {
-		mSsView.margin_left = param;
-		return mSsView.margin_left;
 	}
 
 	public static int e(SSView mSsView) {
@@ -840,11 +915,6 @@ public class SSView extends View {
 
 	public static int f(SSView mSsView) {
 		return mSsView.I;
-	}
-
-	public static int f(SSView mSsView, int param) {
-		mSsView.margin_right = param;
-		return mSsView.margin_right;
 	}
 
 	/**
@@ -874,9 +944,6 @@ public class SSView extends View {
 				// 超过最小尺寸时放大回至最小尺寸
 				ss_seat_current_width++;
 				ss_seat_current_height++;
-				margin_left = (int) Math.round(ss_seat_current_width / 2.0D);
-				margin_right = margin_left;
-				margin_bottom = (int) Math.round(ss_seat_current_height / 2.0D);
 				XaxisOffset_vertical = 0;
 				distanceBetweenSeats = calculateDistanceBetweenSeats();
 				// 滑到最左和最上
@@ -891,9 +958,6 @@ public class SSView extends View {
 				// 超过最大尺寸时缩小回至最大尺寸
 				ss_seat_current_width--;
 				ss_seat_current_height--;
-				margin_left = (int) Math.round(ss_seat_current_width / 2.0D);
-				margin_right = margin_left;
-				margin_bottom = (int) Math.round(ss_seat_current_height / 2.0D);
 				XaxisOffset_vertical = 0;
 				distanceBetweenSeats = calculateDistanceBetweenSeats();
 				invalidate();

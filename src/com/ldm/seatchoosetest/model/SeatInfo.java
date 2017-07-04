@@ -4,12 +4,13 @@ import java.util.ArrayList;
 
 /**
  * 每一排的座位信息
+ * 
  * @author Sunny
  */
 public class SeatInfo {
-	private String row = null;
-	private String desc = null;
-	private ArrayList<Seat> mSeatList = null;
+	private String row = null;// 行数
+	private String desc = null;// 描述
+	private ArrayList<Seat> mSeatList = null;// 一行所有座位
 
 	private String c(String paramString) {
 		if (paramString == null)

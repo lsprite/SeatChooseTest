@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.widget.Toast;
+
+import com.ldm.seatchoosetest.model.Seat;
+import com.ldm.seatchoosetest.model.SeatSelect;
 
 class GestureListener extends GestureDetector.SimpleOnGestureListener {
 	private SSView mSsView;
@@ -33,7 +37,9 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 	public void onLongPress(MotionEvent paramMotionEvent) {
 	}
 
-	public boolean onScroll(MotionEvent paramMotionEvent1, MotionEvent paramMotionEvent2, float x_scroll_distance, float y_scroll_distance) {
+	public boolean onScroll(MotionEvent paramMotionEvent1,
+			MotionEvent paramMotionEvent2, float x_scroll_distance,
+			float y_scroll_distance) {
 		// 是否可以移动和点击
 		if (!SSView.isCanMove(mSsView)) {
 			return false;
@@ -42,14 +48,16 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 		SSView.a(mSsView, true);
 		boolean bool1 = true;
 		boolean bool2 = true;
-		if ((SSView.s(mSsView) < mSsView.getMeasuredWidth()) && (0.0F == SSView.v(mSsView))) {
+		if ((SSView.s(mSsView) < mSsView.getMeasuredWidth())
+				&& (0.0F == SSView.v(mSsView))) {
 			bool1 = false;
 		}
 
-		if ((SSView.getViewHeight(mSsView) < mSsView.getMeasuredHeight()) && (0.0F == SSView.w(mSsView))) {
+		if ((SSView.getViewHeight(mSsView) < mSsView.getMeasuredHeight())
+				&& (0.0F == SSView.w(mSsView))) {
 			bool2 = false;
 		}
-		//修改排数相关坐标(左右滑动)
+		// 修改排数相关坐标(左右滑动)
 		if (bool1) {
 			int k = Math.round(x_scroll_distance);
 			// 修改排数x轴的偏移量
@@ -62,14 +70,18 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 				SSView.a(mSsView, 0.0F);
 			}
 
-			if (SSView.r(mSsView) + mSsView.getMeasuredWidth() > SSView.s(mSsView)) {
+			if (SSView.r(mSsView) + mSsView.getMeasuredWidth() > SSView
+					.s(mSsView)) {
 				// 滑到最右
-				SSView.i(mSsView, SSView.s(mSsView) - mSsView.getMeasuredWidth());
-				SSView.a(mSsView, (float) (mSsView.getMeasuredWidth() - SSView.s(mSsView)));
+				SSView.i(mSsView,
+						SSView.s(mSsView) - mSsView.getMeasuredWidth());
+				SSView.a(
+						mSsView,
+						(float) (mSsView.getMeasuredWidth() - SSView.s(mSsView)));
 			}
 			SSView.setRowOffsetHorizontal(mSsView, (float) k);
 		}
-		//上下滑动
+		// 上下滑动
 		if (bool2) {
 			// 上负下正- 往下滑则减
 			int j = Math.round(y_scroll_distance);
@@ -84,17 +96,20 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 				SSView.b(mSsView, 0.0F);
 			}
 
-			if (SSView.t(mSsView) + mSsView.getMeasuredHeight() > SSView.getViewHeight(mSsView)) {
+			if (SSView.t(mSsView) + mSsView.getMeasuredHeight() > SSView
+					.getViewHeight(mSsView)) {
 				// 滑到底
-				SSView.j(mSsView, SSView.getViewHeight(mSsView) - mSsView.getMeasuredHeight());
-				SSView.b(mSsView, (float) (mSsView.getMeasuredHeight() - SSView.getViewHeight(mSsView)));
+				SSView.j(
+						mSsView,
+						SSView.getViewHeight(mSsView)
+								- mSsView.getMeasuredHeight());
+				SSView.b(mSsView, (float) (mSsView.getMeasuredHeight() - SSView
+						.getViewHeight(mSsView)));
 			}
-			
-			
+
 			SSView.setRowOffsetVertical(mSsView, j);
 		}
-		
-		
+
 		mSsView.invalidate();
 		return false;
 	}
@@ -113,22 +128,34 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 		int j = SSView.b(mSsView, (int) paramMotionEvent.getY());
 
 		if ((j >= 0 && j < SSView.b(mSsView).size())) {
-			if (i >= 0 && i < ((ArrayList<Integer>) (SSView.b(mSsView).get(j))).size()) {
+			if (i >= 0
+					&& i < ((ArrayList<Integer>) (SSView.b(mSsView).get(j)))
+							.size()) {
 				Log.i("TAG", "排数：" + j + "列数：" + i);
-				ArrayList<Integer> localArrayList = (ArrayList<Integer>) SSView.b(mSsView).get(j);
+				ArrayList<Integer> localArrayList = (ArrayList<Integer>) SSView
+						.b(mSsView).get(j);
 				switch (localArrayList.get(i).intValue()) {
-				case 3:
-					// 已选中
+				case Seat.SeatStatus.SELECTED: // 已选中
 					localArrayList.set(i, Integer.valueOf(1));
 					if (SSView.d(mSsView) != null) {
 						SSView.d(mSsView).a(i, j, false);
 					}
+					SSView.delCurrentSelect(mSsView, i + 1, j + 1);
 					break;
-				case 1:
+				case Seat.SeatStatus.SELECTABLE:
 					// 可选
-					localArrayList.set(i, Integer.valueOf(3));
-					if (SSView.d(mSsView) != null) {
-						SSView.d(mSsView).b(i, j, false);
+					if (SSView.getcurrentSelect(mSsView).size() == SSView
+							.getImaxPay(mSsView)) {
+						Toast.makeText(SSView.getContext(mSsView),
+								"最多只能选" + SSView.getImaxPay(mSsView) + "张",
+								Toast.LENGTH_SHORT).show();
+					} else {
+						localArrayList.set(i, Integer.valueOf(3));
+						if (SSView.d(mSsView) != null) {
+							SSView.d(mSsView).b(i, j, false);
+						}
+						SSView.addCurrentSelect(mSsView, new SeatSelect(i + 1,
+								j + 1));
 					}
 					break;
 				default:
