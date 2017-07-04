@@ -95,7 +95,6 @@ public class SSView extends View {
 	private int tempX;
 	private int tempY;
 	private ArrayList<SeatInfo> mListSeatInfos = null;
-	private ArrayList<ArrayList<Integer>> mListSeatConditions = null;
 	private int iMaxPay = 0;// 最大支付座位数
 	private ArrayList<SeatSelect> currentSelect = null;
 	private int totalCountEachRow;
@@ -134,10 +133,9 @@ public class SSView extends View {
 	 * @param bestview_y_max最佳观影
 	 */
 	public void init(int row_count, int rows,
-			ArrayList<SeatInfo> list_seatInfos,
-			ArrayList<ArrayList<Integer>> list_seat_condtions,
-			SSThumView paramSSThumView, int imaxPay, int bestview_x_min,
-			int bestview_x_max, int bestview_y_min, int bestview_y_max) {
+			ArrayList<SeatInfo> list_seatInfos, SSThumView paramSSThumView,
+			int imaxPay, int bestview_x_min, int bestview_x_max,
+			int bestview_y_min, int bestview_y_max) {
 		this.bestview_x_min = bestview_x_min;
 		this.bestview_x_max = bestview_x_max;
 		this.bestview_y_min = bestview_y_min;
@@ -148,7 +146,6 @@ public class SSView extends View {
 		this.totalCountEachRow = row_count;
 		this.rows = rows;
 		this.mListSeatInfos = list_seatInfos;
-		this.mListSeatConditions = list_seat_condtions;
 		// 普通、已锁定和已选中状态图片
 		this.mBitMapSeatNormal = getBitmapFromDrawable((BitmapDrawable) mContext
 				.getResources().getDrawable(R.drawable.seat_normal));
@@ -412,11 +409,13 @@ public class SSView extends View {
 		localPaint2.setTextAlign(Paint.Align.CENTER);
 		localPaint2.setAntiAlias(true);
 		localPaint2.setColor(-16777216);
-		for (int y = 0; y < mListSeatConditions.size(); y++) {
-			ArrayList<Integer> localArrayList = (ArrayList<Integer>) mListSeatConditions
-					.get(y);
+		for (int y = 0; y < mListSeatInfos.size(); y++) {
+			// ArrayList<Integer> localArrayList = (ArrayList<Integer>)
+			// mListSeatInfos.
+			// .get(y);
 			for (int x = 0; x < mListSeatInfos.get(y).getSeatList().size(); x++) {
-				switch (((Integer) localArrayList.get(x)).intValue()) {
+				// switch (((Integer) localArrayList.get(x)).intValue()) {
+				switch (mListSeatInfos.get(y).getSeatList().get(x).getStatus()) {
 				case Seat.SeatStatus.WALKWAY:// 走道
 					localPaint2.setColor(0);
 					drawASeat(x, y, null, paramCanvas, mCanvas, localPaint2);
@@ -457,7 +456,7 @@ public class SSView extends View {
 		for (int i1 = 0; i1 < mListSeatInfos.size(); i1++) {
 			localPaint2.setColor(-1);
 			// 文字
-			paramCanvas.drawText(((SeatInfo) mListSeatInfos.get(i1)).getDesc(),
+			paramCanvas.drawText(((SeatInfo) mListSeatInfos.get(i1)).getDes(),
 					(int) Math.abs(YaxisOffset_horizontal)
 							+ ss_seat_current_width / 2 / 2, i1
 							* ss_seat_current_height + ss_seat_current_height
@@ -869,7 +868,7 @@ public class SSView extends View {
 		return mSsView.ss_seat_current_height;
 	}
 
-	public static ArrayList c(SSView mSsView) {
+	public static ArrayList<SeatInfo> c(SSView mSsView) {
 		return mSsView.mListSeatInfos;
 	}
 
@@ -915,10 +914,6 @@ public class SSView extends View {
 	 */
 	public static int b(SSView mSsView, int param) {
 		return mSsView.b(param);
-	}
-
-	public static ArrayList b(SSView mSsView) {
-		return mSsView.mListSeatConditions;
 	}
 
 	/**

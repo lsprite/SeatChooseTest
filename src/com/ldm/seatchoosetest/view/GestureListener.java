@@ -128,16 +128,22 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 		// 排数
 		int j = SSView.b(mSsView, (int) paramMotionEvent.getY());
 
-		if ((j >= 0 && j < SSView.b(mSsView).size())) {
-			if (i >= 0
-					&& i < ((ArrayList<Integer>) (SSView.b(mSsView).get(j)))
-							.size()) {
+		// if ((j >= 0 && j < SSView.b(mSsView).size())) {
+		if ((j >= 0 && j < SSView.c(mSsView).size())) {
+			// if (i >= 0
+			// && i < ((ArrayList<Integer>) (SSView.b(mSsView).get(j)))
+			// .size()) {
+			if (i >= 0 && i < SSView.c(mSsView).get(j).getSeatList().size()) {
 				Log.i("TAG", "排数：" + j + "列数：" + i);
-				ArrayList<Integer> localArrayList = (ArrayList<Integer>) SSView
-						.b(mSsView).get(j);
-				switch (localArrayList.get(i).intValue()) {
+				// ArrayList<Integer> localArrayList = (ArrayList<Integer>)
+				// SSView
+				// .b(mSsView).get(j);
+				ArrayList<Seat> mSeatList = SSView.c(mSsView).get(j)
+						.getSeatList();
+				switch (mSeatList.get(i).getStatus()) {
 				case Seat.SeatStatus.SELECTED: // 已选中
-					localArrayList.set(i, Integer.valueOf(1));
+					mSeatList.get(i).setStatus(1);
+					// localArrayList.set(i, Integer.valueOf(1));
 					if (SSView.d(mSsView) != null) {
 						SSView.d(mSsView).a(i, j, false);
 					}
@@ -151,7 +157,8 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 								"最多只能选" + SSView.getImaxPay(mSsView) + "张",
 								Toast.LENGTH_SHORT).show();
 					} else {
-						localArrayList.set(i, Integer.valueOf(3));
+						// localArrayList.set(i, Integer.valueOf(3));
+						mSeatList.get(i).setStatus(3);
 						if (SSView.d(mSsView) != null) {
 							SSView.d(mSsView).b(i, j, false);
 						}

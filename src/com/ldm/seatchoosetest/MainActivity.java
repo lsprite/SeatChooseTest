@@ -20,7 +20,6 @@ public class MainActivity extends Activity {
 	private SSView mSSView;
 	private SSThumView mSSThumView;
 	private ArrayList<SeatInfo> list_seatInfos = new ArrayList<SeatInfo>();
-	private ArrayList<ArrayList<Integer>> list_seat_conditions = new ArrayList<ArrayList<Integer>>();
 	private Handler handler = new Handler() {
 	};
 
@@ -35,8 +34,8 @@ public class MainActivity extends Activity {
 		mSSView = (SSView) this.findViewById(R.id.mSSView);
 		mSSThumView = (SSThumView) this.findViewById(R.id.ss_ssthumview);
 		setSeatInfo();
-		mSSView.init(EACH_ROW_COUNT, ROW, list_seatInfos, list_seat_conditions,
-				mSSThumView, 5, Math.abs(EACH_ROW_COUNT / 2 - 4),
+		mSSView.init(EACH_ROW_COUNT, ROW, list_seatInfos, mSSThumView, 5,
+				Math.abs(EACH_ROW_COUNT / 2 - 4),
 				Math.abs(EACH_ROW_COUNT / 2 + 4), Math.abs(ROW / 2 - 3),
 				Math.abs(ROW / 2 + 3));
 		mSSView.setOnSeatClickListener(new OnSeatClickListener() {
@@ -112,32 +111,25 @@ public class MainActivity extends Activity {
 		for (int i = 0; i < ROW; i++) {// 16行
 			SeatInfo mSeatInfo = new SeatInfo();
 			ArrayList<Seat> mSeatList = new ArrayList<Seat>();
-			ArrayList<Integer> mConditionList = new ArrayList<Integer>();
 			for (int j = 0; j < EACH_ROW_COUNT; j++) {// 每排20个座位
 				Seat mSeat = new Seat();
 				if (j < 0) {
-					mSeat.setN("Z");
-					mConditionList.add(0);
+					mSeat.setStatus(0);
 				} else {
-					mSeat.setN(String.valueOf(j - 2));
 					if (j > 10) {
-						mConditionList.add(2);
+						mSeat.setStatus(2);
 					} else if (j == 5) {
-						mConditionList.add(0);
+						mSeat.setStatus(0);
 					} else {
-						mConditionList.add(1);
+						mSeat.setStatus(1);
 					}
 				}
-				mSeat.setDamagedFlg("");
-				mSeat.setLoveInd("0");
+				mSeat.setDes(String.valueOf(j + 1));
 				mSeatList.add(mSeat);
 			}
-			mSeatInfo.setDesc(String.valueOf(i + 1));
-			mSeatInfo.setRow(String.valueOf(i + 1));
+			mSeatInfo.setDes(String.valueOf(i + 1));
 			mSeatInfo.setSeatList(mSeatList);
 			list_seatInfos.add(mSeatInfo);
-			list_seat_conditions.add(mConditionList);
 		}
 	}
-
 }

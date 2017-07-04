@@ -1,5 +1,6 @@
 ﻿package com.ldm.seatchoosetest.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -7,44 +8,26 @@ import java.util.ArrayList;
  * 
  * @author Sunny
  */
-public class SeatInfo {
-	private String row = null;// 行数
-	private String desc = null;// 描述
-	private ArrayList<Seat> mSeatList = null;// 一行所有座位
+public class SeatInfo implements Serializable {
+	static final long serialVersionUID = 1L;
+	//
+	private String des = "";// 行数
+	private ArrayList<Seat> seatList = null;// 一行所有座位
 
-	private String c(String paramString) {
-		if (paramString == null)
-			paramString = "";
-		return paramString;
+	public String getDes() {
+		return des;
 	}
 
-	public Seat getSeat(int paramInt) {
-		if ((paramInt > this.mSeatList.size()) || (paramInt < 0))
-			return new Seat();
-		return (Seat) this.mSeatList.get(paramInt);
-	}
-
-	public String getDesc() {
-		return c(this.desc);
-	}
-
-	public void addSeat(Seat paramSeat) {
-		this.mSeatList.add(paramSeat);
-	}
-
-	public void setRow(String paramString) {
-		this.row = paramString;
+	public void setDes(String des) {
+		this.des = des;
 	}
 
 	public ArrayList<Seat> getSeatList() {
-		return this.mSeatList;
+		return seatList;
 	}
 
-	public void setSeatList(ArrayList<Seat> seat_list) {
-		this.mSeatList = seat_list;
+	public void setSeatList(ArrayList<Seat> seatList) {
+		this.seatList = seatList;
 	}
 
-	public void setDesc(String paramString) {
-		this.desc = paramString;
-	}
 }

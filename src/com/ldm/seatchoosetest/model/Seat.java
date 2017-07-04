@@ -1,6 +1,10 @@
 ﻿package com.ldm.seatchoosetest.model;
 
-public class Seat {
+import java.io.Serializable;
+
+public class Seat implements Serializable {
+	static final long serialVersionUID = 1L;
+
 	//
 	public interface SeatStatus {
 		int WALKWAY_X = -1;// 走道x轴
@@ -11,39 +15,27 @@ public class Seat {
 		int SELECTED = 3;// 已选
 	}
 
-	//
-	/** 序号，当为走道时 为"Z" */
-	private String n = null;
-	/** 损坏标签 */
-	private String damagedFlg = null;
-	/** 情侣座 */
-	private String loveInd = null;
+	private int status = 0;
+	private String des = "";// 列数
 
-	public void setN(String paramString) {
-		this.n = paramString;
+	public Seat() {
+		// TODO Auto-generated constructor stub
 	}
 
-	public boolean a() {
-		return ("1".equals(this.loveInd)) || ("2".equals(this.loveInd));
+	public int getStatus() {
+		return status;
 	}
 
-	public String getN() {
-		return this.n;
+	 public void setStatus(int status) {
+	 this.status = status;
+	 }
+
+	public String getDes() {
+		return des;
 	}
 
-	public void setDamagedFlg(String paramString) {
-		this.damagedFlg = paramString;
+	public void setDes(String des) {
+		this.des = des;
 	}
 
-	public String getDamagedFlg() {
-		return this.damagedFlg;
-	}
-
-	public void setLoveInd(String paramString) {
-		this.loveInd = paramString;
-	}
-
-	public String getLoveInd() {
-		return this.loveInd;
-	}
 }
