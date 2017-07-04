@@ -6,7 +6,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathEffect;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -62,7 +65,8 @@ public class SSView extends View {
 	private SSThumView mSSThumView = null;
 	private int ss_seat_thum_size_w = 120;
 	private int ss_seat_thum_size_h = 90;
-	private int ss_seat_rect_line = 2;
+	private int ss_seat_rect_line = 2;// 缩略图黄色框的厚度/最佳观影位置的虚线宽度
+	private int center_line = 4;// 中线的宽度
 	/** 选座缩略图 */
 	private Bitmap mBitMapThumView = null;
 	private volatile int V = 1500;
@@ -300,10 +304,6 @@ public class SSView extends View {
 	 * @return
 	 */
 	private Rect getBestViewSeat() {
-		System.out.println("----bestview_x_min:" + bestview_x_min);
-		System.out.println("----bestview_x_max:" + bestview_x_max);
-		System.out.println("----bestview_y_min:" + bestview_y_min);
-		System.out.println("----bestview_y_max:" + bestview_y_max);
 		try {
 			Rect localRect = new Rect((bestview_x_min - 1)
 					* ss_seat_current_width + distanceBetweenSeats / 2,
@@ -391,6 +391,19 @@ public class SSView extends View {
 				localPaint3.setColor(Color.RED);
 				localPaint3.setStyle(Paint.Style.FILL);
 				mCanvas.drawRect(getBestViewSeatRectForThumb(), localPaint3);
+				// 缩略图中线
+				localPaint3.setStyle(Paint.Style.STROKE);
+				localPaint3.setColor(Color.WHITE);
+				localPaint3.setStrokeWidth(center_line);
+				Path path = new Path();
+				path.moveTo(ss_seat_thum_size_w / 2, 0);
+				path.lineTo(ss_seat_thum_size_w / 2,
+						(int) (T * rows * (ss_seat_current_width
+								+ distanceBetweenSeats - 1)));
+				DashPathEffect effects = new DashPathEffect(new float[] { 10,
+						10, 10, 10 }, 1);
+				localPaint3.setPathEffect(effects);
+				mCanvas.drawPath(path, localPaint3);
 			}
 		}
 
@@ -442,9 +455,23 @@ public class SSView extends View {
 		localPaint2.setColor(Color.RED);
 		localPaint2.setStyle(Paint.Style.STROKE);
 		localPaint2.setStrokeWidth(ss_seat_rect_line);
+		PathEffect effects = new DashPathEffect(new float[] { 5, 5, 5, 5 }, 1);
+		localPaint2.setPathEffect(effects);
 		paramCanvas.drawRect(getBestViewSeat(), localPaint2);
 		localPaint2.setStyle(Paint.Style.FILL);
-
+		localPaint2.setPathEffect(null);
+		// 画中线
+		localPaint2.setStyle(Paint.Style.STROKE);
+		localPaint2.setColor(Color.DKGRAY);
+		localPaint2.setStrokeWidth(center_line);
+		Path path = new Path();
+		path.moveTo(view_width / 2, 0);
+		path.lineTo(view_width / 2, view_height);
+		effects = new DashPathEffect(new float[] { 10, 10, 10, 10 }, 1);
+		localPaint2.setPathEffect(effects);
+		paramCanvas.drawPath(path, localPaint2);
+		localPaint2.setStyle(Paint.Style.FILL);
+		localPaint2.setPathEffect(null);
 		// 画排数 -> Y轴
 		localPaint2.setTextSize(0.3F * ss_seat_current_height);
 		// 背景颜色
@@ -490,6 +517,7 @@ public class SSView extends View {
 					getThumBorderRect((int) Math.abs(YaxisOffset_horizontal),
 							(int) Math.abs(YaxisOffset_vertical)), localPaint2);
 			localPaint2.setStyle(Paint.Style.FILL);
+			//
 			mCanvas.restore();
 		}
 
