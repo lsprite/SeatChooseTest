@@ -66,7 +66,7 @@ public class SSView extends View {
 	private int ss_seat_thum_size_w = 120;
 	private int ss_seat_thum_size_h = 90;
 	private int ss_seat_rect_line = 2;// 缩略图黄色框的厚度/最佳观影位置的虚线宽度
-	private int center_line = 4;// 中线的宽度
+	private int center_line = 4;// 中线的宽度/屏幕轮廓宽
 	/** 选座缩略图 */
 	private Bitmap mBitMapThumView = null;
 	private volatile int V = 1500;
@@ -90,14 +90,18 @@ public class SSView extends View {
 	private int view_width = 0;
 	/** 整个view的高度s */
 	private int view_height = 0;
+	/** 顶部屏幕高度 */
+	private int margin_top = 100;// 还会影响计算行和排的方法 SSView.a()和SSView.b()
+	/** 缩略图顶部屏幕高度 */
+	private int thum_margin_top = 30;
 	/** 能否移动w */
 	private boolean canMove = true;
 	/** 是否可缩放v */
 	private boolean canZoom = false;
 
 	private boolean first_load_bg = true;
-	private int tempX;
-	private int tempY;
+	private int tempX;// 缩略图实际宽
+	private int tempY;// 缩略图实际高
 	private ArrayList<SeatInfo> mListSeatInfos = null;
 	private int iMaxPay = 0;// 最大支付座位数
 	private ArrayList<SeatSelect> currentSelect = null;
@@ -226,6 +230,29 @@ public class SSView extends View {
 	}
 
 	/**
+	 * 绘制屏幕
+	 */
+	private void drawcreens(Canvas paramCanvas) {
+		// 屏幕区域高margin_top
+		// 宽view_width
+		Paint paint = new Paint();
+		paint.setColor(Color.LTGRAY);//
+		paint.setStrokeWidth(center_line); //
+		paint.setStyle(Paint.Style.FILL);
+		// 画梯形
+		Path path2 = new Path();
+		path2.reset();
+		path2.moveTo(view_width / 4, 0); // 左顶点
+		path2.lineTo(view_width - view_width / 4, 0); // 右顶点
+		path2.lineTo(view_width - (view_width / 4 + ss_seat_current_width),
+				margin_top * 0.6f); // 右底部
+		path2.lineTo(view_width / 4 + ss_seat_current_width, margin_top * 0.6f); // 左底部
+		paramCanvas.drawPath(path2, paint);
+		//
+		// 文字
+	}
+
+	/**
 	 * 座位对应矩形区域
 	 * 
 	 * @param seatNum
@@ -238,10 +265,10 @@ public class SSView extends View {
 		try {
 			Rect localRect = new Rect(seatNum * ss_seat_current_width
 					+ distanceBetweenSeats, rowNum * ss_seat_current_height
-					+ distanceBetweenSeats, (seatNum + 1)
+					+ distanceBetweenSeats + margin_top, (seatNum + 1)
 					* ss_seat_current_width - distanceBetweenSeats,
 					(rowNum + 1) * ss_seat_current_height
-							- distanceBetweenSeats);
+							- distanceBetweenSeats + margin_top);
 			return localRect;
 		} catch (Exception localException) {
 			localException.printStackTrace();
@@ -260,9 +287,13 @@ public class SSView extends View {
 		try {
 			Rect localRect = new Rect(
 					5 + (int) (T * (seatNum * ss_seat_current_width + distanceBetweenSeats)),
-					5 + (int) (T * (rowNum * ss_seat_current_height + distanceBetweenSeats)),
+					5
+							+ (int) (T * (rowNum * ss_seat_current_height + distanceBetweenSeats))
+							+ thum_margin_top,
 					5 + (int) (T * ((seatNum + 1) * ss_seat_current_width - distanceBetweenSeats)),
-					5 + (int) (T * ((rowNum + 1) * ss_seat_current_height - distanceBetweenSeats)));
+					5
+							+ (int) (T * ((rowNum + 1) * ss_seat_current_height - distanceBetweenSeats))
+							+ thum_margin_top);
 			return localRect;
 		} catch (Exception localException) {
 			localException.printStackTrace();
@@ -287,9 +318,9 @@ public class SSView extends View {
 			// return new Rect((int) (5.0D + T * paramInt1), (int) (5.0D + T
 			// * paramInt2), (int) (5.0D + T * paramInt1 + i1 * T),
 			// (int) (5.0D + T * paramInt2 + i3 * T));
-			return new Rect((int) (5.0D + T * paramInt1),
-					(int) (T * paramInt2), (int) (5.0D + T * (paramInt1 + i1)),
-					(int) (5.0D + T * (paramInt2 + i3)));
+			return new Rect((int) (5.0D + T * paramInt1), (int) (T * paramInt2)
+					+ thum_margin_top, (int) (5.0D + T * (paramInt1 + i1)),
+					(int) (5.0D + T * (paramInt2 + i3)) + thum_margin_top);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Rect();
@@ -307,10 +338,10 @@ public class SSView extends View {
 		try {
 			Rect localRect = new Rect((bestview_x_min - 1)
 					* ss_seat_current_width + distanceBetweenSeats / 2,
-					(bestview_y_min - 1) * ss_seat_current_height,
+					(bestview_y_min - 1) * ss_seat_current_height + margin_top,
 					bestview_x_max * ss_seat_current_width
 							+ distanceBetweenSeats / 2, bestview_y_max
-							* ss_seat_current_height);
+							* ss_seat_current_height + margin_top);
 			return localRect;
 		} catch (Exception localException) {
 			localException.printStackTrace();
@@ -330,10 +361,15 @@ public class SSView extends View {
 			Rect localRect = new Rect(
 					5 + (int) (T * ((bestview_x_min - 1)
 							* ss_seat_current_width + distanceBetweenSeats / 2)),
-					5 + (int) (T * ((bestview_y_min - 1)
-							* ss_seat_current_height + distanceBetweenSeats / 2)),
+					5
+							+ (int) (T * ((bestview_y_min - 1)
+									* ss_seat_current_height + distanceBetweenSeats / 2))
+							+ thum_margin_top,
 					5 + (int) (T * (bestview_x_max * ss_seat_current_width - distanceBetweenSeats / 2)),
-					5 + (int) (T * (bestview_y_max * ss_seat_current_height - distanceBetweenSeats / 2)));
+					5
+							+ (int) (T * (bestview_y_max
+									* ss_seat_current_height - distanceBetweenSeats / 2))
+							+ thum_margin_top);
 			return localRect;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -384,7 +420,8 @@ public class SSView extends View {
 					tempX = 5 + (int) (view_width * T);
 					tempY = 5 + (int) (view_height * T);
 				}
-				mCanvas.drawRect(5.0F, 5.0F, tempX, tempY, localPaint2);
+				mCanvas.drawRect(5.0F, 5.0F, tempX, tempY + thum_margin_top,
+						localPaint2);
 				//
 				// 缩略图最佳观赏区域
 				Paint localPaint3 = new Paint();
@@ -396,14 +433,26 @@ public class SSView extends View {
 				localPaint3.setColor(Color.WHITE);
 				localPaint3.setStrokeWidth(center_line);
 				Path path = new Path();
-				path.moveTo(ss_seat_thum_size_w / 2, 0);
+				path.reset();
+				path.moveTo(ss_seat_thum_size_w / 2, +thum_margin_top);
 				path.lineTo(ss_seat_thum_size_w / 2,
 						(int) (T * rows * (ss_seat_current_width
-								+ distanceBetweenSeats - 1)));
+								+ distanceBetweenSeats - 1))
+								+ thum_margin_top);
 				DashPathEffect effects = new DashPathEffect(new float[] { 10,
 						10, 10, 10 }, 1);
 				localPaint3.setPathEffect(effects);
 				mCanvas.drawPath(path, localPaint3);
+				localPaint3.setPathEffect(null);
+				// 缩略图画屏幕
+				// Paint localPaint4 = new Paint();
+				localPaint3.setColor(Color.LTGRAY);
+				localPaint3.setStyle(Paint.Style.FILL);
+				mCanvas.drawRect(new Rect(5 + tempX / 4, 5, tempX - tempX / 4,
+						(int) (5 + 0.6 * thum_margin_top)), localPaint3);
+				// mCanvas.drawRect(new Rect(thum_margin_top / 4, 0,
+				// thum_margin_top - thum_margin_top / 4, (int) 0.6
+				// * ss_seat_thum_size_h), localPaint4);
 			}
 		}
 
@@ -411,7 +460,7 @@ public class SSView extends View {
 		paramCanvas.translate(YaxisOffset_horizontal, YaxisOffset_vertical);
 		// margin_left = (int) Math.round(ss_seat_current_width / 2.0D);
 		view_width = ss_seat_current_width * totalCountEachRow;
-		view_height = ss_seat_current_height * rows;
+		view_height = ss_seat_current_height * rows + margin_top;
 		if (XaxisOffset_vertical == 0) {
 			// this.getHeight()->控件高度 view_height->画布高度
 			XaxisOffset_vertical_min = getHeight();
@@ -451,6 +500,8 @@ public class SSView extends View {
 				}
 			}
 		}
+		// 画屏幕
+		drawcreens(paramCanvas);
 		// 画最佳观赏区域
 		localPaint2.setColor(Color.RED);
 		localPaint2.setStyle(Paint.Style.STROKE);
@@ -465,8 +516,9 @@ public class SSView extends View {
 		localPaint2.setColor(Color.DKGRAY);
 		localPaint2.setStrokeWidth(center_line);
 		Path path = new Path();
-		path.moveTo(view_width / 2, 0);
-		path.lineTo(view_width / 2, view_height);
+		path.reset();
+		path.moveTo(view_width / 2, margin_top);
+		path.lineTo(view_width / 2, view_height + margin_top);
 		effects = new DashPathEffect(new float[] { 10, 10, 10, 10 }, 1);
 		localPaint2.setPathEffect(effects);
 		paramCanvas.drawPath(path, localPaint2);
@@ -476,10 +528,13 @@ public class SSView extends View {
 		localPaint2.setTextSize(0.3F * ss_seat_current_height);
 		// 背景颜色
 		localPaint2.setColor(Color.argb(0x2e, 0x00, 0x00, 0x00));
-		paramCanvas.drawRoundRect(new RectF(Math.abs(YaxisOffset_horizontal),
-				0 * ss_seat_current_height, Math.abs(YaxisOffset_horizontal)
-						+ ss_seat_current_width / 2, rows
-						* ss_seat_current_height), 99, 99, localPaint2);
+		paramCanvas.drawRoundRect(
+				new RectF(Math.abs(YaxisOffset_horizontal), 0
+						* ss_seat_current_height + margin_top, Math
+						.abs(YaxisOffset_horizontal)
+						+ ss_seat_current_width
+						/ 2, rows * ss_seat_current_height + margin_top), 99,
+				99, localPaint2);
 		for (int i1 = 0; i1 < mListSeatInfos.size(); i1++) {
 			localPaint2.setColor(-1);
 			// 文字
@@ -487,7 +542,8 @@ public class SSView extends View {
 					(int) Math.abs(YaxisOffset_horizontal)
 							+ ss_seat_current_width / 2 / 2, i1
 							* ss_seat_current_height + ss_seat_current_height
-							/ 2 + distanceBetweenSeats / 2, localPaint2);
+							/ 2 + distanceBetweenSeats / 2 + margin_top,
+					localPaint2);
 		}
 
 		// 画列数 -> X轴
@@ -952,7 +1008,7 @@ public class SSView extends View {
 	 */
 	private int b(int paramInt) {
 		try {
-			int i1 = (paramInt + distanceBetweenVisibleSeatAndTop)
+			int i1 = (paramInt + distanceBetweenVisibleSeatAndTop - margin_top)
 					/ ss_seat_current_height;
 			return i1;
 		} catch (Exception localException) {
