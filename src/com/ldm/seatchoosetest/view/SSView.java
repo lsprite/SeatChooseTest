@@ -333,7 +333,7 @@ public class SSView extends View {
 			// (int) (5.0D + T * paramInt2 + i3 * T));
 			return new Rect((int) (5.0D + T * paramInt1), (int) (T * paramInt2)
 					+ thum_margin_top, (int) (5.0D + T * (paramInt1 + i1)),
-					(int) (T * (paramInt2 + i3)) + thum_margin_top);
+					(int) (T * (paramInt2 + i3) + thum_margin_top - 5.0D));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Rect();

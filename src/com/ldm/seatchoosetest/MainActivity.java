@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
 				if (j < 0) {
 					mSeat.setStatus(0);
 				} else {
-					if (j > 10) {
+					if (j > 20) {
 						mSeat.setStatus(2);
 					} else if (j == 5) {
 						mSeat.setStatus(0);
