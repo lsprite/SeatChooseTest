@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Paint.FontMetricsInt;
 import android.graphics.Path;
 import android.graphics.PathEffect;
 import android.graphics.PorterDuff;
@@ -240,16 +241,28 @@ public class SSView extends View {
 		paint.setStrokeWidth(center_line); //
 		paint.setStyle(Paint.Style.FILL);
 		// 画梯形
+		//
+		float screen_height = margin_top * 0.6f;// 显示的屏幕的高度
 		Path path2 = new Path();
 		path2.reset();
 		path2.moveTo(view_width / 4, 0); // 左顶点
 		path2.lineTo(view_width - view_width / 4, 0); // 右顶点
 		path2.lineTo(view_width - (view_width / 4 + ss_seat_current_width),
-				margin_top * 0.6f); // 右底部
-		path2.lineTo(view_width / 4 + ss_seat_current_width, margin_top * 0.6f); // 左底部
+				screen_height); // 右底部
+		path2.lineTo(view_width / 4 + ss_seat_current_width, screen_height); // 左底部
 		paramCanvas.drawPath(path2, paint);
 		//
 		// 文字
+		Paint textPaint = new Paint();
+		textPaint.setColor(Color.BLACK);
+		textPaint.setTextSize(40);
+		textPaint.setStyle(Paint.Style.FILL);
+		// http://blog.csdn.net/zly921112/article/details/50401976
+		// 该方法即为设置基线上那个点究竟是left,center,还是right 这里我设置为center
+		textPaint.setTextAlign(Paint.Align.CENTER);// 水平居中
+		FontMetricsInt fontMetrics = paint.getFontMetricsInt();
+		int baseline = (int) ((screen_height - fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.top);// 垂直居中
+		paramCanvas.drawText("屏　　幕", view_width / 2, baseline, textPaint);
 	}
 
 	/**
@@ -320,7 +333,7 @@ public class SSView extends View {
 			// (int) (5.0D + T * paramInt2 + i3 * T));
 			return new Rect((int) (5.0D + T * paramInt1), (int) (T * paramInt2)
 					+ thum_margin_top, (int) (5.0D + T * (paramInt1 + i1)),
-					(int) (5.0D + T * (paramInt2 + i3)) + thum_margin_top);
+					(int) (T * (paramInt2 + i3)) + thum_margin_top);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Rect();
@@ -418,7 +431,7 @@ public class SSView extends View {
 				if (first_load_bg) {
 					first_load_bg = false;
 					tempX = 5 + (int) (view_width * T);
-					tempY = 5 + (int) (view_height * T);
+					tempY = 5 + (int) ((view_height - margin_top) * T);
 				}
 				mCanvas.drawRect(5.0F, 5.0F, tempX, tempY + thum_margin_top,
 						localPaint2);
@@ -434,11 +447,8 @@ public class SSView extends View {
 				localPaint3.setStrokeWidth(center_line);
 				Path path = new Path();
 				path.reset();
-				path.moveTo(ss_seat_thum_size_w / 2, +thum_margin_top);
-				path.lineTo(ss_seat_thum_size_w / 2,
-						(int) (T * rows * (ss_seat_current_width
-								+ distanceBetweenSeats - 1))
-								+ thum_margin_top);
+				path.moveTo(ss_seat_thum_size_w / 2, thum_margin_top);
+				path.lineTo(ss_seat_thum_size_w / 2, tempY + thum_margin_top);
 				DashPathEffect effects = new DashPathEffect(new float[] { 10,
 						10, 10, 10 }, 1);
 				localPaint3.setPathEffect(effects);
@@ -893,15 +903,31 @@ public class SSView extends View {
 
 	private Rect f(int paramInt1, int paramInt2) {
 		try {
-			int v1 = ss_seat_current_width * paramInt1
-					- distanceBetweenSeatAndYAxis - distanceBetweenSeats;
-			int v2 = ss_seat_current_height * paramInt2
-					- distanceBetweenVisibleSeatAndTop - distanceBetweenSeats;
-			int v3 = (paramInt1 + 1) * ss_seat_current_width
-					- distanceBetweenSeatAndYAxis + distanceBetweenSeats;
-			int v4 = 1 * ss_seat_current_height
-					- distanceBetweenVisibleSeatAndTop + distanceBetweenSeats;
-			return new Rect(v1, v2, v3, v4);
+			// int v1 = ss_seat_current_width * paramInt1
+			// - distanceBetweenSeatAndYAxis - distanceBetweenSeats;
+			// int v2 = ss_seat_current_height * paramInt2
+			// - distanceBetweenVisibleSeatAndTop - distanceBetweenSeats;
+			// int v3 = (paramInt1 + 1) * ss_seat_current_width
+			// - distanceBetweenSeatAndYAxis + distanceBetweenSeats;
+			// int v4 = 1 * ss_seat_current_height
+			// - distanceBetweenVisibleSeatAndTop + distanceBetweenSeats;
+			// return new Rect(v1, v2, v3, v4);
+			try {
+				int v1 = ss_seat_current_width * paramInt1
+						+ distanceBetweenSeatAndYAxis - distanceBetweenSeats;
+				int v2 = ss_seat_current_height * paramInt2 + margin_top
+						- distanceBetweenVisibleSeatAndTop
+						- distanceBetweenSeats;
+				int v3 = (paramInt1 + 1) * ss_seat_current_width
+						+ distanceBetweenSeatAndYAxis + distanceBetweenSeats;
+				int v4 = (margin_top + 1) * ss_seat_current_height + margin_top
+						- distanceBetweenVisibleSeatAndTop
+						+ distanceBetweenSeats;
+				return new Rect(v1, v2, v3, v4);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new Rect();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Rect();

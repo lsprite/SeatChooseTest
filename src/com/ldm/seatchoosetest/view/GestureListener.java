@@ -69,7 +69,6 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
 				SSView.i(mSsView, 0);
 				SSView.a(mSsView, 0.0F);
 			}
-
 			if (SSView.r(mSsView) + mSsView.getMeasuredWidth() > SSView
 					.getViewWidth(mSsView)) {
 				// 滑到最右
