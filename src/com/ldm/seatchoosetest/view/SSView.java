@@ -234,6 +234,7 @@ public class SSView extends View {
 	 * 绘制屏幕
 	 */
 	private void drawcreens(Canvas paramCanvas) {
+		System.out.println("----YaxisOffset_vertical:" + YaxisOffset_vertical);
 		// 屏幕区域高margin_top
 		// 宽view_width
 		Paint paint = new Paint();
@@ -245,11 +246,12 @@ public class SSView extends View {
 		float screen_height = margin_top * 0.6f;// 显示的屏幕的高度
 		Path path2 = new Path();
 		path2.reset();
-		path2.moveTo(view_width / 4, 0); // 左顶点
-		path2.lineTo(view_width - view_width / 4, 0); // 右顶点
+		path2.moveTo(view_width / 4, 0 - YaxisOffset_vertical); // 左顶点
+		path2.lineTo(view_width - view_width / 4, 0 - YaxisOffset_vertical); // 右顶点
 		path2.lineTo(view_width - (view_width / 4 + ss_seat_current_width),
-				screen_height); // 右底部
-		path2.lineTo(view_width / 4 + ss_seat_current_width, screen_height); // 左底部
+				screen_height - YaxisOffset_vertical); // 右底部
+		path2.lineTo(view_width / 4 + ss_seat_current_width, screen_height
+				- YaxisOffset_vertical); // 左底部
 		paramCanvas.drawPath(path2, paint);
 		//
 		// 文字
@@ -262,7 +264,8 @@ public class SSView extends View {
 		textPaint.setTextAlign(Paint.Align.CENTER);// 水平居中
 		FontMetricsInt fontMetrics = paint.getFontMetricsInt();
 		int baseline = (int) ((screen_height - fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.top);// 垂直居中
-		paramCanvas.drawText("屏　　幕", view_width / 2, baseline, textPaint);
+		paramCanvas.drawText("屏　　幕", view_width / 2, baseline
+				- YaxisOffset_vertical, textPaint);
 	}
 
 	/**
@@ -510,8 +513,6 @@ public class SSView extends View {
 				}
 			}
 		}
-		// 画屏幕
-		drawcreens(paramCanvas);
 		// 画最佳观赏区域
 		localPaint2.setColor(Color.RED);
 		localPaint2.setStyle(Paint.Style.STROKE);
@@ -534,6 +535,8 @@ public class SSView extends View {
 		paramCanvas.drawPath(path, localPaint2);
 		localPaint2.setStyle(Paint.Style.FILL);
 		localPaint2.setPathEffect(null);
+		// 画屏幕
+		drawcreens(paramCanvas);
 		// 画排数 -> Y轴
 		localPaint2.setTextSize(0.3F * ss_seat_current_height);
 		// 背景颜色

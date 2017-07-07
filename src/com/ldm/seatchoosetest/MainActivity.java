@@ -71,6 +71,8 @@ public class MainActivity extends Activity {
 		// TODO Auto-generated method stub
 		super.onResume();
 		toCenter();
+		System.out.println("---getmyMeasuredHeight:"
+				+ SSView.getmyMeasuredHeight(mSSView));
 	}
 
 	// 用模拟手势让画移动到中间
